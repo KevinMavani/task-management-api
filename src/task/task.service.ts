@@ -1,25 +1,70 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, HttpException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { TaskDto } from './task.dto';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { Task, TaskDocument } from './task.schema';
 
 @Injectable()
 export class TaskService {
-  tasks: TaskDto[] = [];
 
-  addTask(task: TaskDto) {
-    this.tasks.push(task);
+  constructor(
+    @InjectModel(Task.name) private taskModel: Model<TaskDocument>
+   ) { }
+
+  async getTasks() {
+    try {
+      const tasks =  await this.taskModel.find();
+      return {
+        data: tasks,
+        status: HttpStatus.OK,
+        message: 'Task list fetched successfully'
+      }
+    } catch {
+      throw new BadRequestException();
+    }
   }
 
-  getTaskById(id: number) {
-    const task = this.tasks.find(task => task.id === id);
-    return task;
+  async addTask(task: TaskDto) {
+    try {
+      const data = new this.taskModel(task);
+      await data.save();
+      return {
+        data,
+        status: HttpStatus.CREATED,
+        message: 'Task created successfully'
+      }
+    } catch {
+      throw new BadRequestException()
+    }
   }
 
-  updateTask(id: number, task: TaskDto) {
-    const index = this.tasks.findIndex((task) => task.id === id);
-    this.tasks[index] = task;
+  async getTaskById(id: string) {
+    const task = await this.taskModel.findById(id);
+    if (!task) {
+      throw new NotFoundException();
+    }
+    return {
+      data: task,
+      message: 'Task detail fetched successfully',
+      status: HttpStatus.OK
+    };
   }
 
-  removeTask(id: number) {
-    this.tasks = this.tasks.filter((task) => task.id !== id);
+  async updateTask(id: string, task: TaskDto) {
+    await this.taskModel.findByIdAndUpdate(id, task).exec();
+    return {
+      message: 'Task updated successfully',
+      data: [],
+      status: HttpStatus.OK
+    }
+  }
+
+  async removeTask(id: string) {
+    await this.taskModel.findByIdAndDelete(id).exec();
+    return {
+      message: 'Task deleted successfully',
+      data: [],
+      status: HttpStatus.OK
+    }
   }
 }

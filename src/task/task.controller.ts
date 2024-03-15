@@ -11,33 +11,26 @@ export class TaskController {
 
   @Get()
   getTasks() {
-    return this.taskService.tasks;
+    return this.taskService.getTasks();
   }
 
   @Get(':id') 
-  getTaskById(@Param('id', ParseIntPipe) id: number) {
-    const task = this.taskService.getTaskById(id);
-    if (!task) {
-      return { message: 'Task not found' };
-    }
-    return task;
+  getTaskById(@Param('id') id: string) {
+    return this.taskService.getTaskById(id);
   }
 
   @Post() 
   createTask(@Body() createTaskDto: TaskDto) {
-    this.taskService.addTask(createTaskDto);
-    return { message: 'Task created successfully' };
+    return this.taskService.addTask(createTaskDto);
   }
 
   @Put(':id') 
-  updateTask(@Param('id', ParseIntPipe) id: number, @Body() createTaskDto: TaskDto) {
-    this.taskService.updateTask(id, createTaskDto);
-    return { message: 'Task updated successfully' };
+  updateTask(@Param('id') id: string, @Body() createTaskDto: TaskDto) {
+    return this.taskService.updateTask(id, createTaskDto);
   }
 
   @Delete(':id')
-  removeTask(@Param() id: number) {
-    this.taskService.removeTask(id);                          
-    return { message: 'Task deleted successfully' };
+  removeTask(@Param('id') id: string) {
+    return this.taskService.removeTask(id);                          
   }
 }
