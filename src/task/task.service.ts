@@ -11,18 +11,26 @@ export class TaskService {
     @InjectModel(Task.name) private taskModel: Model<TaskDocument>
    ) { }
 
-  async getTasks() {
-    try {
-      const tasks =  await this.taskModel.find();
-      return {
-        data: tasks,
-        status: HttpStatus.OK,
-        message: 'Task list fetched successfully'
-      }
-    } catch {
-      throw new BadRequestException();
-    }
+  async getTasks(page: number, limit: number) {
+    const totalCount = await this.taskModel.countDocuments();
+    const totalPages = Math.ceil(totalCount / limit);
+
+    const tasks = await this.taskModel
+      .find()
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .exec();
+
+    return {
+      data: tasks,
+      page,
+      limit,
+      totalItems: totalCount,
+      totalPages,
+      message: 'Task list fetched successfully'
+    };
   }
+
 
   async addTask(task: TaskDto) {
     try {
